@@ -70,6 +70,7 @@ app.get('/tickets', async (req, res) => {
     const product = productHolder.getByNameAndVersion(productName, version);
 
     const client = await pool.connect();
+    console.log(product.getTickets());
     const result = await client.query(`SELECT * FROM TICKETS WHERE Id = ANY($1::int[])`, [product.getTickets()]);
     res.send(result.rows);
     client.release();
@@ -152,15 +153,15 @@ app.post('/tickets', async (req ,res) => {
 			${ticketCreationDate.getTime()}, ${limitDate_ts},
             '${ticket.estado}', '${ticket.cliente}', '${ticket.creador}', 
             '${ticket.descripcion}', '${ticket.recurso}', 
-            '${ticket.producto}', '${ticket.version}') RETURNING Id`;
-  client.query(insertQuery, (err, res) => {
+            '${ticket.producto}', '${ticket.version}') RETURNING id`;
+  await client.query(insertQuery, (err, res) => {
     if (err) {
-      console.log(err.message);
       return;
-    } else {
-      let ticketId = res.rows[0].Id;
-      productHolder.addTicket(ticket.producto, ticket.version, ticketId);
-    }
+    }  
+    debugger;
+    let ticketId = res.rows[0].id;
+    console.log(ticketId);
+    productHolder.addTicket(ticket.producto, ticket.version, ticketId);
   });
   res.status(201).send(req.body);
 });
