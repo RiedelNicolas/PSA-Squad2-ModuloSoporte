@@ -7,8 +7,6 @@ class ProductHolder {
 		this.products = [];
 		this.products.push(new Product("Siu Guarani", ["1.0.0"]));
 		this.products.push(new Product("Proyecto 2", ["2.0", "2.1", "2.1.1"]));
-		this.products[0].addTicket(7);
-		this.products[1].addTicket(3);
 	}
 
 	addProduct(product){
