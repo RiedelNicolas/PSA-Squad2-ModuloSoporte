@@ -37,6 +37,8 @@ app.use(express.json());
 
 const Severity = require('./severity_mapping.js');
 const severityMapping = new Severity();
+const ProductHolder = require('./product_holder');
+const productHolder = new ProductHolder();
 
 app.listen(PORT, () => {
   console.log(`Listening on ${ PORT }`)
@@ -57,8 +59,18 @@ app.get('/clients', async (req, res) => {
 // este get nos devuelve todos los tickets de la base de datos
 app.get('/tickets', async (req, res) => {
   try {
+    const productName = req.query.producto;
+    const version = req.query.version;
+    if (!productName || !version) {
+      res.sendStatus(400);
+      return;
+    }
+    console.log(productName, version);
+
+    const product = productHolder.getByNameAndVersion(productName, version);
+
     const client = await pool.connect();
-    const result = await client.query("SELECT * FROM TICKETS");
+    const result = await client.query(`SELECT * FROM TICKETS WHERE Id = ANY($1::int[])`, [product.getTickets()]);
     res.send(result.rows);
     client.release();
   } catch (err) {
@@ -88,7 +100,6 @@ app.get('/tickets/:nombre', async (req, res) => {
 // borrar ticket
 // solo se podra borrar si el ticket esta en estado === cerrado (criterios)
 app.delete('/tickets/:nombre', async (req, res) => {
-  debugger;
   const client = await pool.connect();
   const ticketName = req.params.nombre;
   const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticketName}'`);
@@ -109,16 +120,27 @@ app.delete('/tickets/:nombre', async (req, res) => {
 app.post('/tickets', async (req ,res) => {
   const client = await pool.connect();
   let ticket = req.body;
+  const productName = ticket.producto;
+  const version = ticket.version;
+
+  const product = productHolder.getByNameAndVersion(productName, version);
+  if (product === undefined) {
+    client.release();
+    res.status(409).send("Product does not exist");
+    return;
+  }
+
   let ticketWithSameName = [];
   try {
-    ticketWithSameName = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticket.nombre}'`);
+    ticketWithSameName = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticket.nombre}'
+    AND TICKETS.PRODUCTO = '${ticket.producto}' AND TICKETS.VERSION = '${ticket.version}'`);
   } catch (err) {
   }
   // Siguiendo los criterios de aceptacion
   // Si el nombre existe, no se crea
   if (ticketWithSameName.rows.length) {
     client.release();
-    res.status(409).send("Cannot POST a ticket with repeated name");
+    res.status(409).send("The product and version already contains a ticket with the same name");
     return;
   }
 
@@ -130,12 +152,15 @@ app.post('/tickets', async (req ,res) => {
 			${ticketCreationDate.getTime()}, ${limitDate_ts},
             '${ticket.estado}', '${ticket.cliente}', '${ticket.creador}', 
             '${ticket.descripcion}', '${ticket.recurso}', 
-            '${ticket.producto}', '${ticket.version}')`;
+            '${ticket.producto}', '${ticket.version}') RETURNING Id`;
   client.query(insertQuery, (err, res) => {
     if (err) {
       console.log(err.message);
       return;
-    } 
+    } else {
+      let ticketId = res.rows[0].Id;
+      productHolder.addTicket(ticket.producto, ticket.version, ticketId);
+    }
   });
   res.status(201).send(req.body);
 });
