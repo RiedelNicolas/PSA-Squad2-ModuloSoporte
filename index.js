@@ -60,7 +60,6 @@ async function loadProducts() {
       }
     }
   }
-  console.log(productHolder.products);
   client.release();
 }
 
@@ -106,12 +105,12 @@ app.get('/tickets', async (req, res) => {
   }
 });
 
-// obtener ticket a través de su nombre
-app.get('/tickets/:nombre', async (req, res) => {
+// obtener ticket a través de su id
+app.get('/tickets/:id', async (req, res) => {
   try {
     const client = await pool.connect();
-    const ticketName = req.params.nombre;
-    const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticketName}'`);
+    const ticketId = req.params.id;
+    const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
     client.release();
     if (!result.rows.length) {
       res.status(404).send("Ticket not found");
@@ -126,10 +125,10 @@ app.get('/tickets/:nombre', async (req, res) => {
 
 // borrar ticket
 // solo se podra borrar si el ticket esta en estado === cerrado (criterios)
-app.delete('/tickets/:nombre', async (req, res) => {
+app.delete('/tickets/:id', async (req, res) => {
   const client = await pool.connect();
-  const ticketName = req.params.nombre;
-  const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticketName}'`);
+  const ticketId = req.params.id;
+  const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
   if (!result.rows.length) {
     res.status(404).send("Ticket not found");
     return;
@@ -139,7 +138,7 @@ app.delete('/tickets/:nombre', async (req, res) => {
     return;
   }
 
-  await client.query(`DELETE FROM TICKETS WHERE TICKETS.ID = ${result.rows[0].id}`);
+  await client.query(`DELETE FROM TICKETS WHERE TICKETS.Id = ${ticketId}`);
   res.sendStatus(200);
 });
 
@@ -192,10 +191,10 @@ app.post('/tickets', async (req ,res) => {
   res.status(201).send(req.body);
 });
 
-app.put('/tickets/:nombre', async (req ,res) => {
+app.put('/tickets/:id', async (req ,res) => {
   const client = await pool.connect();
-  const ticketName = req.params.nombre;
-  const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticketName}'`);
+  const ticketId = req.params.id;
+  const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
   let ticketModifications = req.body;
   if (!result.rows.length) {
     res.status(404).send("Ticket not found");
