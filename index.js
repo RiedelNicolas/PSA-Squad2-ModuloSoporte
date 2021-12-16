@@ -44,6 +44,11 @@ app.listen(PORT, () => {
   console.log(`Listening on ${ PORT }`)
 });
 
+
+app.get('/products', async (req, res) => {
+  res.send(productHolder.getProducts());
+});
+
 // para tomar los clientes 
 app.get('/clients', async (req, res) => {
   const clients = await fetch(clients_api)

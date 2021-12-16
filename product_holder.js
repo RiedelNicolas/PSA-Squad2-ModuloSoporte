@@ -26,6 +26,15 @@ class ProductHolder {
 				prodVersion === version)
 			);
 	}
+
+	getProducts(){
+		return this.products.map(this.selectNameAndVersions);
+	}
+
+	selectNameAndVersions(product){
+		const {name, versions} = product;
+		return {name, versions};
+	}
 }
 
 module.exports = ProductHolder;
