@@ -45,6 +45,27 @@ app.listen(PORT, () => {
 });
 
 
+// carga de tickets para productos hardcodeados
+
+async function loadProducts() {
+  const client = await pool.connect();
+  let products = productHolder.getProducts()
+  for (let p in products){
+    for (let version in products[p].versions){
+      let res = await client.query(`SELECT id FROM TICKETS WHERE TICKETS.PRODUCTO = '${products[p].name}' 
+                        AND TICKETS.VERSION = '${products[p].versions[version]}'`); 
+      for (let id in res.rows){
+        product = productHolder.getByNameAndVersion(products[p].name, products[p].versions[version]);
+        product.addTicket(res.rows[id].id);
+      }
+    }
+  }
+  console.log(productHolder.products);
+  client.release();
+}
+
+loadProducts();
+
 app.get('/products', async (req, res) => {
   res.send(productHolder.getProducts());
 });
