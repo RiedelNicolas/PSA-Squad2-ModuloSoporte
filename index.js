@@ -73,7 +73,18 @@ async function loadProducts() {
 loadProducts();
 
 app.get('/products', async (req, res) => {
-  res.send(productHolder.getProducts());
+  debugger;
+  let allProducts = productHolder.getProducts();
+  let productsByVersion = {};
+  for (let product in allProducts) {
+    if (!(allProducts[product].name in productsByVersion)){
+      productsByVersion[allProducts[product].name] = [allProducts[product].version];
+    } else {
+      productsByVersion[allProducts[product].name].push(allProducts[product].version);
+    }
+  }
+
+  res.send(productsByVersion);
 });
 
 // para tomar los clientes 
