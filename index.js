@@ -1,12 +1,21 @@
 const express = require('express');
 // para pullear a los clientes usamos cross fetch
 const fetch = require('cross-fetch');
+// un servicio de http
+const axios = require('axios').default;
+
 
 const PORT = process.env.PORT || 5000;
 const { Pool, DatabaseError } = require('pg');
 
 // la api de clientes
 const clients_api = "https://anypoint.mulesoft.com/mocking/api/v1/sources/exchange/assets/754f50e8-20d8-4223-bbdc-56d50131d0ae/clientes-psa/1.0.0/m/api/clientes";
+const proyects_api = "https://psa-tribu2-proyectos.herokuapp.com/tareas";
+
+const axiosInstance = axios.create({
+  baseUrl: proyects_api,
+  timeout: 5000
+});
 
 
 const pool = new Pool({
@@ -49,15 +58,14 @@ app.listen(PORT, () => {
 
 async function loadProducts() {
   const client = await pool.connect();
-  let products = productHolder.getProducts()
+  let products = productHolder.getProducts();
   for (let p in products){
-    for (let version in products[p].versions){
-      let res = await client.query(`SELECT id FROM TICKETS WHERE TICKETS.PRODUCTO = '${products[p].name}' 
-                        AND TICKETS.VERSION = '${products[p].versions[version]}'`); 
-      for (let id in res.rows){
-        product = productHolder.getByNameAndVersion(products[p].name, products[p].versions[version]);
-        product.addTicket(res.rows[id].id);
-      }
+    let res = await client.query(`SELECT id FROM TICKETS WHERE TICKETS.PRODUCTO = '${products[p].name}' 
+                      AND TICKETS.VERSION = '${products[p].version}'`); 
+    console.log(products[p].name, products[p].version);
+    for (let id in res.rows){
+      product = productHolder.getByNameAndVersion(products[p].name, products[p].version);
+      product.addTicket(res.rows[id].id);
     }
   }
   client.release();
@@ -90,12 +98,9 @@ app.get('/tickets', async (req, res) => {
       res.sendStatus(400);
       return;
     }
-    console.log(productName, version);
 
     const product = productHolder.getByNameAndVersion(productName, version);
-
     const client = await pool.connect();
-    console.log(product.getTickets());
     const result = await client.query(`SELECT * FROM TICKETS WHERE Id = ANY($1::int[])`, [product.getTickets()]);
     res.send(result.rows);
     client.release();
@@ -148,6 +153,15 @@ app.post('/tickets', async (req ,res) => {
   let ticket = req.body;
   const productName = ticket.producto;
   const version = ticket.version;
+  /*const taskIds = ticket.tareas;
+  const tasks = [];
+  for (let task in taskIds) {
+    console.log(task);
+    // fetcheamos la tarea
+    let taskBody = await axios.get(proyects_api + `/${task}`);
+    console.log(taskBody.rows[0]);
+    tasks.push(taskBody);
+  }*/
 
   const product = productHolder.getByNameAndVersion(productName, version);
   if (product === undefined) {
@@ -179,15 +193,21 @@ app.post('/tickets', async (req ,res) => {
             '${ticket.estado}', '${ticket.cliente}', '${ticket.creador}', 
             '${ticket.descripcion}', '${ticket.recurso}', 
             '${ticket.producto}', '${ticket.version}') RETURNING id`;
+  let idTicket;
   await client.query(insertQuery, (err, res) => {
     if (err) {
       return;
     }  
     debugger;
-    let ticketId = res.rows[0].id;
-    console.log(ticketId);
-    productHolder.addTicket(ticket.producto, ticket.version, ticketId);
+    idTicket = res.rows[0].id;
+    productHolder.addTicket(ticket.producto, ticket.version, idTicket);
   });
+/*
+  for (let task in tasks){
+    task.rows[0].idTicket = idTicket;
+    axiosInstance.put('/proyectos' + `/${task.rows[0].idTicket}`, task.rows[0]);
+  }
+*/
   res.status(201).send(req.body);
 });
 

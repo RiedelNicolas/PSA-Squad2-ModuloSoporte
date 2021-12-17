@@ -5,8 +5,10 @@ const Product = require('./product');
 class ProductHolder {
 	constructor(){
 		this.products = [];
-		this.products.push(new Product("Siu Guarani", ["1.0.0"]));
-		this.products.push(new Product("Proyecto 2", ["2.0", "2.1", "2.1.1"]));
+		this.products.push(new Product("Siu Guarani", "1.0.0"));
+		this.products.push(new Product("Proyecto 2", "2.0"));
+		this.products.push(new Product("Proyecto 2", "2.1"));
+		this.products.push(new Product("Proyecto 2", "2.1.1"));
 	}
 
 	addProduct(product){
@@ -22,18 +24,11 @@ class ProductHolder {
 	getByNameAndVersion(name, version){
 		return this.products.find(product => 
 			product.name === name && 
-			product.versions.find(prodVersion => 
-				prodVersion === version)
-			);
+			product.version === version);
 	}
 
 	getProducts(){
-		return this.products.map(this.selectNameAndVersions);
-	}
-
-	selectNameAndVersions(product){
-		const {name, versions} = product;
-		return {name, versions};
+		return this.products;
 	}
 }
 

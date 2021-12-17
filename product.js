@@ -1,14 +1,9 @@
 class Product {
 	// un producto puede tener muchas versiones
-	constructor(name, versions){
+	constructor(name, version){
 		this.name = name;
-		this.versions = versions;
+		this.version = version;
 		this.tickets = [];
-	}
-
-	// para poder agregar mas versiones a un producto ya existente
-	addNewVersion(version) {
-		this.versions.push(version);
 	}
 
 	addTicket(ticket) {
