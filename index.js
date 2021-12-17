@@ -101,7 +101,6 @@ app.get('/tickets', async (req, res) => {
 
     const product = productHolder.getByNameAndVersion(productName, version);
     const result = await client.query(`SELECT * FROM TICKETS WHERE Id = ANY($1::int[])`, [product.getTickets()]);
-    const taskResults = await client.query(`SELECT TICKETS_TASKS.Task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.Ticket_id = '${ticketId}'`)
     res.send(result.rows);
     client.release();
   } catch (err) {
