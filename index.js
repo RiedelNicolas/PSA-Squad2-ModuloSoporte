@@ -101,6 +101,7 @@ app.get('/tickets', async (req, res) => {
 
     const product = productHolder.getByNameAndVersion(productName, version);
     const result = await client.query(`SELECT * FROM TICKETS WHERE Id = ANY($1::int[])`, [product.getTickets()]);
+    const taskResults = await client.query(`SELECT TICKETS_TASKS.Task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.Ticket_id = '${ticketId}'`)
     res.send(result.rows);
     client.release();
   } catch (err) {
@@ -116,12 +117,16 @@ app.get('/tickets/:id', async (req, res) => {
     const ticket = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
     const taskResults = await client.query(`SELECT TICKETS_TASKS.Task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.Ticket_id = '${ticketId}'`)
     .catch(err => console.log(err));
-    if (!ticket.rows.length || !taskResults.rows.length) {
-      res.status(404).send("Ticket or task not found");
-      client.release();
+    client.release();
+    if (!ticket.rows.length) {
+      res.status(404).send("Ticket not found");
       return;
     }
-    debugger;
+    if (!taskResults.rows.length){
+      ticket.rows[0]["tareas"] = [];
+      res.status(200).send(ticket.rows[0]);
+      return;
+    }
     tasks = [];
     for (let task in taskResults.rows) {
       try {
@@ -132,10 +137,10 @@ app.get('/tickets/:id', async (req, res) => {
   }
     ticket.rows[0]["tareas"] = tasks;
 
-    client.release();
     res.status(200).send(ticket.rows[0]);
   } catch (err) {
     console.log(err);
+    client.release();
     req.send(500);
   }
 });
