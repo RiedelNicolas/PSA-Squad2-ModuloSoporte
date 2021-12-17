@@ -10,7 +10,7 @@ const { Pool, DatabaseError } = require('pg');
 
 // la api de clientes
 const clients_api = "https://anypoint.mulesoft.com/mocking/api/v1/sources/exchange/assets/754f50e8-20d8-4223-bbdc-56d50131d0ae/clientes-psa/1.0.0/m/api/clientes";
-const proyects_api = "https://psa-tribu2-proyectos.herokuapp.com/tareas";
+const proyects_api = "https://psa-tribu2-proyectos.herokuapp.com";
 
 const axiosInstance = axios.create({
   baseUrl: proyects_api,
@@ -62,7 +62,6 @@ async function loadProducts() {
   for (let p in products){
     let res = await client.query(`SELECT id FROM TICKETS WHERE TICKETS.PRODUCTO = '${products[p].name}' 
                       AND TICKETS.VERSION = '${products[p].version}'`); 
-    console.log(products[p].name, products[p].version);
     for (let id in res.rows){
       product = productHolder.getByNameAndVersion(products[p].name, products[p].version);
       product.addTicket(res.rows[id].id);
@@ -91,6 +90,7 @@ app.get('/clients', async (req, res) => {
 // base de api para tickets!
 // este get nos devuelve todos los tickets de la base de datos
 app.get('/tickets', async (req, res) => {
+  const client = await pool.connect();
   try {
     const productName = req.query.producto;
     const version = req.query.version;
@@ -100,13 +100,11 @@ app.get('/tickets', async (req, res) => {
     }
 
     const product = productHolder.getByNameAndVersion(productName, version);
-    const client = await pool.connect();
     const result = await client.query(`SELECT * FROM TICKETS WHERE Id = ANY($1::int[])`, [product.getTickets()]);
     res.send(result.rows);
     client.release();
   } catch (err) {
-    console.log(err);
-    res.sendStatus(400);
+    res.status(404).send("Product not found");
   }
 });
 
@@ -149,66 +147,69 @@ app.delete('/tickets/:id', async (req, res) => {
 
 
 app.post('/tickets', async (req ,res) => {
-  const client = await pool.connect();
-  let ticket = req.body;
-  const productName = ticket.producto;
-  const version = ticket.version;
-  /*const taskIds = ticket.tareas;
-  const tasks = [];
-  for (let task in taskIds) {
-    console.log(task);
-    // fetcheamos la tarea
-    let taskBody = await axios.get(proyects_api + `/${task}`);
-    console.log(taskBody.rows[0]);
-    tasks.push(taskBody);
-  }*/
+  try{
+    const client = await pool.connect();
+    let ticket = req.body;
+    const productName = ticket.producto;
+    const version = ticket.version;
+    const taskIds = ticket.tareas;
+    const tasks = [];
+    for (let task in taskIds) {
+      console.log(task);
+      // fetcheamos la tarea
+      let taskBody = await axios.get(proyects_api + `/tareas/${taskIds[task]}`);
+      tasks.push(taskBody.data);
+    }
 
-  const product = productHolder.getByNameAndVersion(productName, version);
-  if (product === undefined) {
-    client.release();
-    res.status(409).send("Product does not exist");
-    return;
-  }
-
-  let ticketWithSameName = [];
-  try {
-    ticketWithSameName = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticket.nombre}'
-    AND TICKETS.PRODUCTO = '${ticket.producto}' AND TICKETS.VERSION = '${ticket.version}'`);
-  } catch (err) {
-  }
-  // Siguiendo los criterios de aceptacion
-  // Si el nombre existe, no se crea
-  if (ticketWithSameName.rows.length) {
-    client.release();
-    res.status(409).send("The product and version already contains a ticket with the same name");
-    return;
-  }
-
-  let ticketCreationDate = new Date();
-  let limitDate_ts = severityMapping.fromDateMapping(ticket.severidad, ticketCreationDate);
-  let insertQuery = `INSERT INTO TICKETS(nombre, tipo, severidad, fecha_creacion, 
-    fecha_limite, estado, cliente, creador, descripcion, recurso, producto, version) 
-    VALUES('${ticket.nombre}', '${ticket.tipo}', ${ticket.severidad},
-			${ticketCreationDate.getTime()}, ${limitDate_ts},
-            '${ticket.estado}', '${ticket.cliente}', '${ticket.creador}', 
-            '${ticket.descripcion}', '${ticket.recurso}', 
-            '${ticket.producto}', '${ticket.version}') RETURNING id`;
-  let idTicket;
-  await client.query(insertQuery, (err, res) => {
-    if (err) {
+    const product = productHolder.getByNameAndVersion(productName, version);
+    if (product === undefined) {
+      client.release();
+      res.status(409).send("Product does not exist");
       return;
-    }  
-    debugger;
-    idTicket = res.rows[0].id;
-    productHolder.addTicket(ticket.producto, ticket.version, idTicket);
-  });
-/*
-  for (let task in tasks){
-    task.rows[0].idTicket = idTicket;
-    axiosInstance.put('/proyectos' + `/${task.rows[0].idTicket}`, task.rows[0]);
+    }
+
+    let ticketWithSameName = [];
+    try {
+      ticketWithSameName = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.NOMBRE = '${ticket.nombre}'
+      AND TICKETS.PRODUCTO = '${ticket.producto}' AND TICKETS.VERSION = '${ticket.version}'`);
+    } catch (err) {
+    }
+    // Siguiendo los criterios de aceptacion
+    // Si el nombre existe, no se crea
+    if (ticketWithSameName.rows.length) {
+      client.release();
+      res.status(409).send("The product and version already contains a ticket with the same name");
+      return;
+    }
+
+    let ticketCreationDate = new Date();
+    let limitDate_ts = severityMapping.fromDateMapping(ticket.severidad, ticketCreationDate);
+    let insertQuery = `INSERT INTO TICKETS(nombre, tipo, severidad, fecha_creacion, 
+      fecha_limite, estado, cliente, creador, descripcion, recurso, producto, version) 
+      VALUES('${ticket.nombre}', '${ticket.tipo}', ${ticket.severidad},
+        ${ticketCreationDate.getTime()}, ${limitDate_ts},
+              '${ticket.estado}', '${ticket.cliente}', '${ticket.creador}', 
+              '${ticket.descripcion}', '${ticket.recurso}', 
+              '${ticket.producto}', '${ticket.version}') RETURNING id`;
+    var idTicket;
+    client.query(insertQuery, async (err, queryRes) => {
+      if (err) {
+        throw err;
+      }  
+      idTicket = queryRes.rows[0].id;
+      productHolder.addTicket(ticket.producto, ticket.version, idTicket);
+      debugger;
+      for (let task in tasks){
+        tasks[task].idTicket = idTicket;
+        axiosInstance.put(proyects_api + `/tareas/${tasks[task].idTarea}`, tasks[task])
+        .then()
+        .catch(() => console.log("Proyectos rechazo el update de ticket"));
+      }
+      res.status(201).send(req.body);
+    });
+  } catch(err){
+    res.sendStatus(500);
   }
-*/
-  res.status(201).send(req.body);
 });
 
 app.put('/tickets/:id', async (req ,res) => {
