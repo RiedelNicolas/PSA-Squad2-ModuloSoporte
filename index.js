@@ -223,7 +223,7 @@ app.put('/tickets/:id', async (req ,res) => {
   }
   try {
     if (ticketModifications.estado) {
-      let modifyQuery = `UPDATE TICKETS SET estado = '${ticketModifications.estado}' where nombre = '${ticketName}'`;
+      let modifyQuery = `UPDATE TICKETS SET estado = '${ticketModifications.estado}' where Id = '${ticketId}'`;
       client.query(modifyQuery, (err, res) => {});
     }
     if (ticketModifications.severidad) {
@@ -231,11 +231,11 @@ app.put('/tickets/:id', async (req ,res) => {
       let creationDate = new Date(parseInt(result.rows[0].fecha_creacion));
       let limitDate_ts = severityMapping.fromDateMapping(ticketModifications.severidad, creationDate);
       let modifyQuery = `UPDATE TICKETS SET severidad = '${ticketModifications.severidad}', 
-                         fecha_limite = '${limitDate_ts}' where nombre = '${ticketName}'`;
+                         fecha_limite = '${limitDate_ts}' where Id = '${ticketId}'`;
       client.query(modifyQuery, (err, res) => {});
     }
     if (ticketModifications.descripcion) {
-      let modifyQuery = `UPDATE TICKETS SET descripcion = '${ticketModifications.descripcion}' where nombre = '${ticketName}'`;
+      let modifyQuery = `UPDATE TICKETS SET descripcion = '${ticketModifications.descripcion}' where Id = '${ticketId}'`;
       client.query(modifyQuery, (err, res) => {});
     }
   } catch (err) {
