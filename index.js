@@ -113,16 +113,30 @@ app.get('/tickets/:id', async (req, res) => {
   try {
     const client = await pool.connect();
     const ticketId = req.params.id;
-    const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
-    client.release();
-    if (!result.rows.length) {
-      res.status(404).send("Ticket not found");
+    const ticket = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
+    const taskResults = await client.query(`SELECT TICKETS_TASKS.Task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.Ticket_id = '${ticketId}'`)
+    .catch(err => console.log(err));
+    if (!ticket.rows.length || !taskResults.rows.length) {
+      res.status(404).send("Ticket or task not found");
+      client.release();
       return;
     }
-    res.status(200).send(result.rows[0]);
+    debugger;
+    tasks = [];
+    for (let task in taskResults.rows) {
+      try {
+        tasks.push(taskResults.rows[task].task_id);
+      } catch (err){
+        break;
+      }
+  }
+    ticket.rows[0]["tareas"] = tasks;
+
+    client.release();
+    res.status(200).send(ticket.rows[0]);
   } catch (err) {
     console.log(err);
-    req.sendStatus(500);
+    req.send(500);
   }
 });
 
@@ -157,8 +171,10 @@ app.post('/tickets', async (req ,res) => {
     for (let task in taskIds) {
       console.log(task);
       // fetcheamos la tarea
-      let taskBody = await axios.get(proyects_api + `/tareas/${taskIds[task]}`);
-      tasks.push(taskBody.data);
+      let taskBody = await axios.get(proyects_api + `/tareas/${taskIds[task]}`)
+      .catch(err => console.log(err));
+      debugger;
+      tasks.push(taskBody.data.Mensaje);
     }
 
     const product = productHolder.getByNameAndVersion(productName, version);
@@ -197,13 +213,17 @@ app.post('/tickets', async (req ,res) => {
         throw err;
       }  
       idTicket = queryRes.rows[0].id;
-      productHolder.addTicket(ticket.producto, ticket.version, idTicket);
       debugger;
+      productHolder.addTicket(ticket.producto, ticket.version, idTicket);
       for (let task in tasks){
         tasks[task].idTicket = idTicket;
         axiosInstance.put(proyects_api + `/tareas/${tasks[task].idTarea}`, tasks[task])
         .then()
         .catch(() => console.log("Proyectos rechazo el update de ticket"));
+        client.query(`INSERT INTO TICKETS_TASKS(task_id, ticket_id) 
+                      VALUES('${tasks[task].idTarea}', '${idTicket}')`)
+                      .then()
+                      .catch(err => console.log(err));
       }
       res.status(201).send(req.body);
     });
