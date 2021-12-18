@@ -112,6 +112,28 @@ app.get('/tickets', async (req, res) => {
 
     const product = productHolder.getByNameAndVersion(productName, version);
     const result = await client.query(`SELECT * FROM TICKETS WHERE Id = ANY($1::int[])`, [product.getTickets()]);
+    for(const i in result.rows){
+      let tasks = [];
+      try {
+        const client = await pool.connect();
+        const taskResults = await client.query(`SELECT TICKETS_TASKS.Task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.Ticket_id = '${result.rows[i].id}'`)
+        .catch(err => console.log(err));
+        client.release();
+        for (let task in taskResults.rows) {
+          try {
+            tasks.push(taskResults.rows[task].task_id);
+          } catch (err){
+            break;
+          }
+        }
+      } catch (err) {
+        console.log(err);
+        client.release();
+        req.send(500);
+      }
+      result.rows[i].tareas = tasks;
+    }
+    
     res.send(result.rows);
     client.release();
   } catch (err) {
@@ -145,7 +167,7 @@ app.get('/tickets/:id', async (req, res) => {
         break;
       }
   }
-    ticket.rows[0]["tareas"] = tasks;
+  ticket.rows[0]["tareas"] = tasks;
 
     res.status(200).send(ticket.rows[0]);
   } catch (err) {
