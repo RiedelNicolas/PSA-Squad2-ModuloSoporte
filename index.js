@@ -83,8 +83,7 @@ app.get('/products', async (req, res) => {
       productsByVersion[allProducts[product].name].push(allProducts[product].version);
     }
   }
-
-  res.send(productsByVersion);
+  res.send(Object.entries(productsByVersion));
 });
 
 // para tomar los clientes 
