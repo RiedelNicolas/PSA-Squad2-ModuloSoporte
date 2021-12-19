@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="crear-ticket;creo-un-ticket" tests="2" failures="1" skipped="1">
+        <properties>
+            <property name="URI" value="C:/Users/chuby/Desktop/Repo aninfo/PSA-Squad2-ModuloSoporte/bdd_tests/features/crear_ticket.feature">
+            </property>
+        </properties>
+        <testcase name="When creo un ticket valido" classname="crear-ticket;creo-un-ticket" time="0.867662">
+            <failure message="SessionNotCreatedError: session not created: This version of ChromeDriver only supports Chrome version 86">SessionNotCreatedError: session not created: This version of ChromeDriver only supports Chrome version 86
+Current browser version is 96.0.4664.110 with binary path C:\Program Files\Google\Chrome\Application\chrome.exe
+  (Driver info: chromedriver=86.0.4240.22 (398b0743353ff36fb1b82468f63a3a93b4e2e89e-refs/branch-heads/4240@{#378}),platform=Windows NT 10.0.19043 x86_64)
+    at Object.checkLegacyResponse (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-webdriver\lib\error.js:529:15)
+    at parseHttpResponse (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-webdriver\lib\http.js:509:13)
+    at C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-webdriver\lib\http.js:441:30
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+From: Task: WebDriver.createSession()
+    at Function.createSession (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-webdriver\lib\webdriver.js:769:24)
+    at Function.createSession (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-webdriver\chrome.js:761:15)
+    at createDriver (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-webdriver\index.js:170:33)
+    at Builder.build (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-webdriver\index.js:642:16)
+    at new module.exports (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-cucumber-js\runtime\chromeDriver.js:20:8)
+    at getDriverInstance (C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-cucumber-js\runtime\world.js:54:22)
+    at C:\Users\chuby\Desktop\Repo aninfo\PSA-Squad2-ModuloSoporte\node_modules\selenium-cucumber-js\runtime\world.js:207:29</failure>
+        </testcase>
+        <testcase name="Then se crea en la base de datos" classname="crear-ticket;creo-un-ticket">
+            <skipped message="">
+            </skipped>
+        </testcase>
+    </testsuite>
+</testsuites>

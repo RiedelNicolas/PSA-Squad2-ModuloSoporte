@@ -1,0 +1,62 @@
+[
+  {
+    "description": "    Aca va la historia de usuario",
+    "elements": [
+      {
+        "id": "crear-ticket;creo-un-ticket",
+        "keyword": "Scenario",
+        "line": 4,
+        "name": "Creo un ticket",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "name": "creo un ticket valido",
+            "result": {
+              "status": "failed",
+              "duration": 867662000,
+              "error_message": "SessionNotCreatedError: session not created: This version of ChromeDriver only supports Chrome version 86\nCurrent browser version is 96.0.4664.110 with binary path C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\n  (Driver info: chromedriver=86.0.4240.22 (398b0743353ff36fb1b82468f63a3a93b4e2e89e-refs/branch-heads/4240@{#378}),platform=Windows NT 10.0.19043 x86_64)\n    at Object.checkLegacyResponse (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\error.js:529:15)\n    at parseHttpResponse (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\http.js:509:13)\n    at C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\http.js:441:30\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\nFrom: Task: WebDriver.createSession()\n    at Function.createSession (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\webdriver.js:769:24)\n    at Function.createSession (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\chrome.js:761:15)\n    at createDriver (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\index.js:170:33)\n    at Builder.build (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\index.js:642:16)\n    at new module.exports (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\chromeDriver.js:20:8)\n    at getDriverInstance (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\world.js:54:22)\n    at C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\world.js:207:29"
+            },
+            "line": 5,
+            "match": {
+              "location": "aninfo\\PSA-Squad2-ModuloSoporte\\bdd_tests\\step-definitions\\crear_ticket_steps.js:13"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "name": "se crea en la base de datos",
+            "result": {
+              "status": "skipped"
+            },
+            "line": 6,
+            "match": {
+              "location": "aninfo\\PSA-Squad2-ModuloSoporte\\bdd_tests\\step-definitions\\crear_ticket_steps.js:41"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "After ",
+            "result": {
+              "status": "failed",
+              "duration": 1041800,
+              "error_message": "SessionNotCreatedError: session not created: This version of ChromeDriver only supports Chrome version 86\nCurrent browser version is 96.0.4664.110 with binary path C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\n  (Driver info: chromedriver=86.0.4240.22 (398b0743353ff36fb1b82468f63a3a93b4e2e89e-refs/branch-heads/4240@{#378}),platform=Windows NT 10.0.19043 x86_64)\n    at Object.checkLegacyResponse (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\error.js:529:15)\n    at parseHttpResponse (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\http.js:509:13)\n    at C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\http.js:441:30\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\nFrom: Task: WebDriver.createSession()\n    at Function.createSession (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\webdriver.js:769:24)\n    at Function.createSession (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\chrome.js:761:15)\n    at createDriver (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\index.js:170:33)\n    at Builder.build (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\index.js:642:16)\n    at new module.exports (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\chromeDriver.js:20:8)\n    at getDriverInstance (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\world.js:54:22)\n    at C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\world.js:207:29\nFrom: Task: WebDriver.takeScreenshot()\n    at thenableWebDriverProxy.schedule (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\webdriver.js:807:17)\n    at thenableWebDriverProxy.takeScreenshot (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-webdriver\\lib\\webdriver.js:1083:17)\n    at createWorld.<anonymous> (C:\\Users\\chuby\\Desktop\\Repo aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\world.js:253:27)\n    at processTicksAndRejections (node:internal/process/task_queues:78:11)"
+            },
+            "hidden": true,
+            "match": {
+              "location": "aninfo\\PSA-Squad2-ModuloSoporte\\node_modules\\selenium-cucumber-js\\runtime\\world.js:250"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "crear-ticket",
+    "keyword": "Feature",
+    "line": 1,
+    "name": "Crear Ticket",
+    "tags": [],
+    "uri": "C:/Users/chuby/Desktop/Repo aninfo/PSA-Squad2-ModuloSoporte/bdd_tests/features/crear_ticket.feature"
+  }
+]
