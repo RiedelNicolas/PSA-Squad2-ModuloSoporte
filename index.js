@@ -3,7 +3,7 @@ const express = require('express');
 const fetch = require('cross-fetch');
 // un servicio de http
 const axios = require('axios').default;
-
+const qs = require('qs');
 
 const PORT = process.env.PORT || 5000;
 const { Pool, DatabaseError } = require('pg');
@@ -122,26 +122,7 @@ app.get('/tickets', async (req, res) => {
       }
       ticket.tareas = tasks;
     }
-    /*for(const i in result.rows){
-      let tasks = [];
-      try {
-        const client = await pool.connect();
-        .catch(err => console.log(err));
-        client.release();
-        for (let task in taskResults.rows) {
-          try {
-            tasks.push(taskResults.rows[task].task_id);
-          } catch (err){
-            break;
-          }
-        }
-      } catch (err) {
-        console.log(err);
-        client.release();
-        req.send(500);
-      }
-      result.rows[i].tareas = tasks;
-    }*/
+
     
     res.send(result.rows);
     client.release();
@@ -175,8 +156,8 @@ app.get('/tickets/:id', async (req, res) => {
       } catch (err){
         break;
       }
-  }
-  ticket.rows[0]["tareas"] = tasks;
+    }
+    ticket.rows[0]["tareas"] = tasks;
 
     res.status(200).send(ticket.rows[0]);
   } catch (err) {
@@ -200,28 +181,49 @@ app.delete('/tickets/:id', async (req, res) => {
     res.status(400).send("Ticket not closed");
     return;
   }
-  await client.query(`DELETE FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`)
-  await client.query(`DELETE FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`).catch(err => console.log(err));
+  const tasks = await client.query(`SELECT task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`);
+  client.query(`DELETE FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`)
+  client.query(`DELETE FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`).catch(err => console.log(err));
+  debugger;
+  let tasks_ids = [];
+  for (const t of tasks.rows) {
+    tasks_ids.push(t.task_id);
+  }
+  const task_data = await axiosInstance.get(proyects_api + '/tareas/', {
+    params: {
+      ids: task_ids
+    },
+    paramsSerializer: params => {
+      return qs.stringify(params)
+    }
+  });
+  for (const task of task_data.rows) {
+    task.idTicket = 0;
+    axiosInstance.put(proyects_api + `/tareas/${task.idTarea}`, task)
+    .then()
+    .catch(() => console.log("Proyectos rechazo el update de ticket"));
+  }
+  
   res.sendStatus(200);
 });
 
 
 app.post('/tickets', async (req ,res) => {
+  debugger;
   try{
     const client = await pool.connect();
     let ticket = req.body;
     const productName = ticket.producto;
     const version = ticket.version;
-    const taskIds = ticket.tareas;
-    const tasks = [];
-    for (let task in taskIds) {
-      console.log(task);
-      // fetcheamos la tarea
-      let taskBody = await axios.get(proyects_api + `/tareas/${taskIds[task]}`)
-      .catch(err => console.log(err));
-      debugger;
-      tasks.push(taskBody.data.Mensaje);
+    const taskIds_json = ticket.tareas;
+    let taskIds = [];
+    for (let task of taskIds_json) {
+      taskIds.push(task);
     }
+    console.log(`/tareas/?${taskIds.map((n, index) => `ids=${n}`).join('&')}`);
+    let x = proyects_api + `/tareas/?${taskIds.map((n, index) => `ids=${n}`).join('&')}`;
+    let tasksBodys = await axios.get(x).catch(err => console.log(err));
+
 
     const product = productHolder.getByNameAndVersion(productName, version);
     if (product === undefined) {
@@ -261,13 +263,14 @@ app.post('/tickets', async (req ,res) => {
       idTicket = queryRes.rows[0].id;
       debugger;
       productHolder.addTicket(ticket.producto, ticket.version, idTicket);
-      for (let task in tasks){
-        tasks[task].idTicket = idTicket;
-        axiosInstance.put(proyects_api + `/tareas/${tasks[task].idTarea}`, tasks[task])
+      for (let task of tasksBodys.data){
+        task.idTicket = idTicket;
+        debugger;
+        axiosInstance.put(proyects_api + `/tareas/${task.idTarea}`, task)
         .then()
         .catch(() => console.log("Proyectos rechazo el update de ticket"));
         client.query(`INSERT INTO TICKETS_TASKS(task_id, ticket_id) 
-                      VALUES('${tasks[task].idTarea}', '${idTicket}')`)
+                      VALUES('${task.idTarea}', '${idTicket}')`)
                       .then()
                       .catch(err => console.log(err));
       }
