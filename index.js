@@ -189,15 +189,9 @@ app.delete('/tickets/:id', async (req, res) => {
   for (const t of tasks.rows) {
     tasks_ids.push(t.task_id);
   }
-  const task_data = await axiosInstance.get(proyects_api + '/tareas/', {
-    params: {
-      ids: task_ids
-    },
-    paramsSerializer: params => {
-      return qs.stringify(params)
-    }
-  });
-  for (const task of task_data.rows) {
+  let x = proyects_api + `/tareas/?${tasks_ids.map((n, index) => `ids=${n}`).join('&')}`;
+  const task_data = await axiosInstance.get(x);
+  for (const task of task_data.data) {
     task.idTicket = 0;
     axiosInstance.put(proyects_api + `/tareas/${task.idTarea}`, task)
     .then()
