@@ -200,8 +200,8 @@ app.delete('/tickets/:id', async (req, res) => {
     res.status(400).send("Ticket not closed");
     return;
   }
-
-  await client.query(`DELETE FROM TICKETS WHERE TICKETS.Id = ${ticketId}`);
+  await client.query(`DELETE FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`)
+  await client.query(`DELETE FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`).catch(err => console.log(err));
   res.sendStatus(200);
 });
 
