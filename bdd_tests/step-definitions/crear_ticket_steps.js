@@ -10,11 +10,10 @@ const axiosInstance = axios.create({
   
 
 module.exports = function(){
-    this.When('creo un ticket valido', function(expression){
-        console.log('expression is', expression);
+    this.When('creo un ticket valido', async function(){
 
         const ticket_valido = {
-            "nombre": "Nombre Tickets1",
+            "nombre": "Nombre Tickets69",
             "tipo": "consulta",
             "severidad": 2,
             "estado": "abierto",
@@ -28,18 +27,9 @@ module.exports = function(){
             "producto": "Siu Guarani",
             "version": "1.0.0"
           }
+		let data = await axiosInstance.post(url + `/tickets`, ticket_valido);
+        return data.rows;
+    })
 
-        axiosInstance.post(url + `/tickets`, ticket_valido)
-        .then(function (response) {
-            console.log(response);
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-        return true;
-    })
-    this.Then('se crea en la base de datos', function(res){
-        console.log('res is', res);
-        return true;
-    })
+    this.Then('se crea en la base de datos', function(){})
 };
