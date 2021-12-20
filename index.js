@@ -59,11 +59,11 @@ app.listen(PORT, () => {
 async function loadProducts() {
   const client = await pool.connect();
   let products = productHolder.getProducts();
-  for (let p in products){
+  for (let p in products) {
     let res = await client.query(`SELECT id FROM TICKETS WHERE TICKETS.PRODUCTO = '${products[p].name}' 
-                      AND TICKETS.VERSION = '${products[p].version}'`); 
-    for (let id in res.rows){
-      product = productHolder.getByNameAndVersion(products[p].name, products[p].version);
+                      AND TICKETS.VERSION = '${products[p].version}'`);
+    for (let id in res.rows) {
+      let product = productHolder.getByNameAndVersion(products[p].name, products[p].version);
       product.addTicket(res.rows[id].id);
     }
   }
@@ -134,27 +134,28 @@ app.get('/tickets', async (req, res) => {
 
 // obtener ticket a través de su id
 app.get('/tickets/:id', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const client = await pool.connect();
+
     const ticketId = req.params.id;
     const ticket = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
     const taskResults = await client.query(`SELECT TICKETS_TASKS.Task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.Ticket_id = '${ticketId}'`)
-    .catch(err => console.log(err));
+        .catch(err => console.log(err));
     client.release();
     if (!ticket.rows.length) {
       res.status(404).send("Ticket not found");
       return;
     }
-    if (!taskResults.rows.length){
+    if (!taskResults.rows.length) {
       ticket.rows[0]["tareas"] = [];
       res.status(200).send(ticket.rows[0]);
       return;
     }
-    tasks = [];
+    let tasks = [];
     for (let task in taskResults.rows) {
       try {
         tasks.push(taskResults.rows[task].task_id);
-      } catch (err){
+      } catch (err) {
         break;
       }
     }
@@ -179,13 +180,13 @@ app.delete('/tickets/:id', async (req, res) => {
     res.status(404).send("Ticket not found");
     return;
   }
-  if (result.rows[0].estado !== "cerrado") {
+  if (result.rows[0].estado.toLowerCase() !== "cerrado") {
     client.release();
     res.status(400).send("Ticket not closed");
     return;
   }
   const tasks = await client.query(`SELECT task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`);
-  client.query(`DELETE FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`)
+  client.query(`DELETE FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`);
   client.query(`DELETE FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`).catch(err => console.log(err));
   let tasks_ids = [];
   for (const t of tasks.rows) {
