@@ -89,7 +89,7 @@ app.get('/products', async (req, res) => {
 
 // para tomar los clientes 
 app.get('/clients', async (req, res) => {
-  const clients = await fetch(clients_api)
+  const clients = await fetch(clients_api);
   if (!clients.ok) {
     res.sendStatus(clients.status);
     return;
@@ -106,6 +106,7 @@ app.get('/tickets', async (req, res) => {
     const productName = req.query.producto;
     const version = req.query.version;
     if (!productName || !version) {
+      client.release();
       res.sendStatus(400);
       return;
     }
@@ -174,17 +175,18 @@ app.delete('/tickets/:id', async (req, res) => {
   const ticketId = req.params.id;
   const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
   if (!result.rows.length) {
+    client.release();
     res.status(404).send("Ticket not found");
     return;
   }
   if (result.rows[0].estado !== "cerrado") {
+    client.release();
     res.status(400).send("Ticket not closed");
     return;
   }
   const tasks = await client.query(`SELECT task_id FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`);
   client.query(`DELETE FROM TICKETS_TASKS WHERE TICKETS_TASKS.ticket_id = '${ticketId}'`)
   client.query(`DELETE FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`).catch(err => console.log(err));
-  debugger;
   let tasks_ids = [];
   for (const t of tasks.rows) {
     tasks_ids.push(t.task_id);
@@ -198,14 +200,14 @@ app.delete('/tickets/:id', async (req, res) => {
     .catch(() => console.log("Proyectos rechazo el update de ticket"));
   }
   
+  client.release();
   res.sendStatus(200);
 });
 
 
 app.post('/tickets', async (req ,res) => {
-  debugger;
+  const client = await pool.connect();
   try{
-    const client = await pool.connect();
     let ticket = req.body;
     const productName = ticket.producto;
     const version = ticket.version;
@@ -214,10 +216,14 @@ app.post('/tickets', async (req ,res) => {
     for (let task of taskIds_json) {
       taskIds.push(task);
     }
-    console.log(`/tareas/?${taskIds.map((n, index) => `ids=${n}`).join('&')}`);
     let x = proyects_api + `/tareas/?${taskIds.map((n, index) => `ids=${n}`).join('&')}`;
     let tasksBodys = await axios.get(x).catch(err => console.log(err));
 
+    if (!tasksBodys.data) {
+      res.status(400).send("No associated task exists for the ticket");
+      client.release();
+      return;
+    }
 
     const product = productHolder.getByNameAndVersion(productName, version);
     if (product === undefined) {
@@ -268,9 +274,11 @@ app.post('/tickets', async (req ,res) => {
                       .then()
                       .catch(err => console.log(err));
       }
+      client.release();
       res.status(201).send(req.body);
     });
   } catch(err){
+    client.release();
     res.sendStatus(500);
   }
 });
@@ -281,6 +289,7 @@ app.put('/tickets/:id', async (req ,res) => {
   const result = await client.query(`SELECT * FROM TICKETS WHERE TICKETS.Id = '${ticketId}'`);
   let ticketModifications = req.body;
   if (!result.rows.length) {
+    client.release();
     res.status(404).send("Ticket not found");
     return;
   }
